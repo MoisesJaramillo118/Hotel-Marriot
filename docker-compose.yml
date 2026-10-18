@@ -1,0 +1,124 @@
+# Despliegue de la plataforma: cada servicio es un contenedor independiente.
+# Solo el API Gateway se publica hacia afuera (https://localhost:8443); los servicios y la
+# base de datos viven en la red interna "backend".
+name: jw-marriott-soa
+
+x-servicio: &servicio
+  restart: unless-stopped
+  networks: [backend]
+  depends_on:
+    postgres:
+      condition: service_healthy
+
+x-db: &db
+  DB_USER: ${DB_USER:-marriott}
+  DB_PASSWORD: ${DB_PASSWORD:-marriott}
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-marriott}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-marriott}
+      POSTGRES_DB: postgres
+      TZ: America/Lima
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/01-bases.sql:ro
+    ports:
+      # Solo para inspeccionar las bases con pgAdmin/DBeaver desde la PC.
+      - "127.0.0.1:${DB_PORT:-5433}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-marriott} -d db_notificaciones"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [backend]
+
+  clientes:
+    <<: *servicio
+    build: { context: ., dockerfile: docker/service.Dockerfile, args: { MODULE: services/clientes } }
+    image: marriott/clientes:1.0.0
+    environment:
+      <<: *db
+      DB_URL: jdbc:postgresql://postgres:5432/db_clientes
+
+  habitaciones:
+    <<: *servicio
+    build: { context: ., dockerfile: docker/service.Dockerfile, args: { MODULE: services/habitaciones } }
+    image: marriott/habitaciones:1.0.0
+    environment:
+      <<: *db
+      DB_URL: jdbc:postgresql://postgres:5432/db_habitaciones
+
+  paquetes:
+    <<: *servicio
+    build: { context: ., dockerfile: docker/service.Dockerfile, args: { MODULE: services/paquetes } }
+    image: marriott/paquetes:1.0.0
+    environment:
+      <<: *db
+      DB_URL: jdbc:postgresql://postgres:5432/db_paquetes
+
+  tours:
+    <<: *servicio
+    build: { context: ., dockerfile: docker/service.Dockerfile, args: { MODULE: services/tours } }
+    image: marriott/tours:1.0.0
+    environment:
+      <<: *db
+      DB_URL: jdbc:postgresql://postgres:5432/db_tours
+
+  pagos:
+    <<: *servicio
+    build: { context: ., dockerfile: docker/service.Dockerfile, args: { MODULE: services/pagos } }
+    image: marriott/pagos:1.0.0
+    environment:
+      <<: *db
+      DB_URL: jdbc:postgresql://postgres:5432/db_pagos
+
+  notificaciones:
+    <<: *servicio
+    build: { context: ., dockerfile: docker/service.Dockerfile, args: { MODULE: services/notificaciones } }
+    image: marriott/notificaciones:1.0.0
+    environment:
+      <<: *db
+      DB_URL: jdbc:postgresql://postgres:5432/db_notificaciones
+
+  reservas:
+    <<: *servicio
+    build: { context: ., dockerfile: docker/service.Dockerfile, args: { MODULE: services/reservas } }
+    image: marriott/reservas:1.0.0
+    environment:
+      <<: *db
+      DB_URL: jdbc:postgresql://postgres:5432/db_reservas
+      CLIENTES_URL: http://clientes:8080
+      HABITACIONES_URL: http://habitaciones:8080
+      PAQUETES_URL: http://paquetes:8080
+      TOURS_URL: http://tours:8080
+      PAGOS_URL: http://pagos:8080
+      NOTIFICACIONES_URL: http://notificaciones:8080
+
+  gateway:
+    build: { context: ., dockerfile: gateway/Dockerfile }
+    image: marriott/gateway:1.0.0
+    restart: unless-stopped
+    networks: [backend]
+    ports:
+      - "${GATEWAY_PORT:-8443}:8443"
+    environment:
+      SSL_ENABLED: ${SSL_ENABLED:-true}
+      JWT_SECRET: ${JWT_SECRET:-cambia-este-secreto-de-desarrollo-de-32-caracteres-o-mas}
+      CLIENTES_URL: http://clientes:8080
+      HABITACIONES_URL: http://habitaciones:8080
+      RESERVAS_URL: http://reservas:8080
+      PAQUETES_URL: http://paquetes:8080
+      TOURS_URL: http://tours:8080
+      PAGOS_URL: http://pagos:8080
+      NOTIFICACIONES_URL: http://notificaciones:8080
+    depends_on: [clientes, habitaciones, reservas, paquetes, tours, pagos, notificaciones]
+
+networks:
+  backend:
+
+volumes:
+  pgdata:

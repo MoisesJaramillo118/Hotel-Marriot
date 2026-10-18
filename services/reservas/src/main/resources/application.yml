@@ -1,0 +1,43 @@
+server:
+  port: ${PORT:8080}
+
+spring:
+  application:
+    name: reservas
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/db_reservas}
+    username: ${DB_USER:marriott}
+    password: ${DB_PASSWORD:marriott}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+    defer-datasource-initialization: true
+  sql:
+    init:
+      mode: always
+  jackson:
+    property-naming-strategy: SNAKE_CASE
+    serialization:
+      write-dates-as-timestamps: false
+    time-zone: America/Lima
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+logging:
+  level:
+    pe.utp.marriott: INFO
+
+# Direcciones internas de los servicios que compone el orquestador (red interna de Docker).
+servicios:
+  timeout: ${SERVICIOS_TIMEOUT:5s}
+  clientes: ${CLIENTES_URL:http://localhost:8081}
+  habitaciones: ${HABITACIONES_URL:http://localhost:8082}
+  paquetes: ${PAQUETES_URL:http://localhost:8084}
+  tours: ${TOURS_URL:http://localhost:8085}
+  pagos: ${PAGOS_URL:http://localhost:8086}
+  notificaciones: ${NOTIFICACIONES_URL:http://localhost:8087}

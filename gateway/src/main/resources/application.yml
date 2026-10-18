@@ -1,0 +1,68 @@
+server:
+  port: ${PORT:8443}
+  ssl:
+    # Terminación TLS en el gateway (HTTPS hacia afuera; HTTP en la red interna de Docker).
+    enabled: ${SSL_ENABLED:true}
+    key-store: ${SSL_KEYSTORE:file:/app/keystore.p12}
+    key-store-password: ${SSL_KEYSTORE_PASSWORD:changeit}
+    key-store-type: PKCS12
+    key-alias: gateway
+
+spring:
+  application:
+    name: api-gateway
+  jackson:
+    property-naming-strategy: SNAKE_CASE
+  cloud:
+    gateway:
+      routes:
+        - id: clientes
+          uri: ${CLIENTES_URL:http://localhost:8081}
+          predicates:
+            - Path=/api/v1/clientes/**
+        - id: habitaciones
+          uri: ${HABITACIONES_URL:http://localhost:8082}
+          predicates:
+            - Path=/api/v1/habitaciones/**
+        - id: reservas
+          uri: ${RESERVAS_URL:http://localhost:8083}
+          predicates:
+            - Path=/api/v1/reservas/**
+        - id: paquetes
+          uri: ${PAQUETES_URL:http://localhost:8084}
+          predicates:
+            - Path=/api/v1/paquetes/**
+        - id: tours
+          uri: ${TOURS_URL:http://localhost:8085}
+          predicates:
+            - Path=/api/v1/tours/**
+        - id: pagos
+          uri: ${PAGOS_URL:http://localhost:8086}
+          predicates:
+            - Path=/api/v1/pagos/**
+        - id: notificaciones
+          uri: ${NOTIFICACIONES_URL:http://localhost:8087}
+          predicates:
+            - Path=/api/v1/notificaciones/**
+      httpclient:
+        connect-timeout: 3000
+        response-timeout: 15s
+
+seguridad:
+  emisor: jw-marriott-lima
+  jwt-secreto: ${JWT_SECRET:cambia-este-secreto-de-desarrollo-de-32-caracteres-o-mas}
+  jwt-duracion: ${JWT_DURACION:1h}
+  # Usuarios de demostración del entorno académico.
+  usuarios:
+    - usuario: ${CLIENTE_USUARIO:cliente}
+      clave: ${CLIENTE_CLAVE:cliente123}
+      roles: [CLIENTE]
+    - usuario: ${ADMIN_USUARIO:recepcion}
+      clave: ${ADMIN_CLAVE:recepcion123}
+      roles: [ADMIN, CLIENTE]
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health

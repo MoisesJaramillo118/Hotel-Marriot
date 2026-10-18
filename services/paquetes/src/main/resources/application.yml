@@ -1,0 +1,33 @@
+server:
+  port: ${PORT:8080}
+
+spring:
+  application:
+    name: paquetes
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/db_paquetes}
+    username: ${DB_USER:marriott}
+    password: ${DB_PASSWORD:marriott}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+    defer-datasource-initialization: true
+  sql:
+    init:
+      mode: always
+  jackson:
+    property-naming-strategy: SNAKE_CASE
+    serialization:
+      write-dates-as-timestamps: false
+    time-zone: America/Lima
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+logging:
+  level:
+    pe.utp.marriott: INFO

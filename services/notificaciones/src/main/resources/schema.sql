@@ -1,0 +1,1 @@
+CREATE SEQUENCE IF NOT EXISTS seq_notificacion START 1;
