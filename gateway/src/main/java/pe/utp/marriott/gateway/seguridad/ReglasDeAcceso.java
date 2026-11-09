@@ -14,6 +14,7 @@ import org.springframework.web.util.pattern.PathPatternParser;
 public final class ReglasDeAcceso {
 
     public static final String ADMIN = "ADMIN";
+    public static final String PARTNER = "PARTNER";
 
     private static final Set<HttpMethod> TODOS = Set.of();
     private static final Set<HttpMethod> ESCRITURAS =
@@ -29,6 +30,9 @@ public final class ReglasDeAcceso {
     private static final PathPatternParser PARSER = new PathPatternParser();
 
     private static final List<Regla> REGLAS = List.of(
+            // Interoperabilidad entre hoteles: consultar el contacto compartible es solo para
+            // sistemas asociados (rol PARTNER). Debe ir ANTES de la regla de /clientes (ADMIN).
+            regla(Set.of(HttpMethod.GET), "/api/v1/clientes/compartible", PARTNER),
             // El cliente puede reservar un tour; el resto de escrituras de catálogo es del personal.
             regla(Set.of(HttpMethod.POST), "/api/v1/tours/{id}/reserva", null),
             regla(ESCRITURAS, "/api/v1/habitaciones/**", ADMIN),

@@ -60,6 +60,11 @@ seguridad:
     - usuario: ${ADMIN_USUARIO:recepcion}
       clave: ${ADMIN_CLAVE:recepcion123}
       roles: [ADMIN, CLIENTE]
+    # Sistema asociado (otro hotel) que consume el contacto compartible por API.
+    # Es una credencial de MÁQUINA, no de persona: solo tiene rol PARTNER.
+    - usuario: ${PARTNER_USUARIO:partner-hotel}
+      clave: ${PARTNER_CLAVE:partner123}
+      roles: [PARTNER]
 
 management:
   endpoints:
