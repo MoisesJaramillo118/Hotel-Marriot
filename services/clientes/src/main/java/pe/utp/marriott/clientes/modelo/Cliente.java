@@ -53,6 +53,7 @@ public class Cliente {
 
     // Consentimiento del cliente para compartir su contacto básico con hoteles asociados (partners).
     // Por defecto NO comparte: el cliente debe activarlo explícitamente.
-    @Column(name = "comparte_datos", nullable = false)
+    // columnDefinition con DEFAULT false para que ALTER TABLE funcione sobre filas ya existentes.
+    @Column(name = "comparte_datos", nullable = false, columnDefinition = "boolean not null default false")
     private boolean comparteDatos = false;
 }
