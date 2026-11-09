@@ -12,11 +12,12 @@ public record ClienteResponse(
         ClienteRequest.Documento documento,
         String telefono,
         EstadoCliente estado,
+        boolean comparteDatos,
         OffsetDateTime creadoEn) {
 
     public static ClienteResponse de(Cliente c) {
         return new ClienteResponse(c.getId(), c.getNombres(), c.getApellidos(), c.getEmail(),
                 new ClienteRequest.Documento(c.getDocTipo(), c.getDocNumero()), c.getTelefono(), c.getEstado(),
-                c.getCreadoEn());
+                c.isComparteDatos(), c.getCreadoEn());
     }
 }

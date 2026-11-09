@@ -44,4 +44,28 @@ public class ClienteController {
     public ClienteResponse actualizar(@PathVariable String id, @Valid @RequestBody ClienteRequest req) {
         return ClienteResponse.de(service.actualizar(id, req));
     }
+
+    /** Cuerpo para que el titular active o desactive el consentimiento de compartir datos. */
+    public record ConsentimientoRequest(boolean comparteDatos) {
+    }
+
+    /**
+     * El titular (o el personal, en su nombre) activa o desactiva el consentimiento para
+     * compartir su contacto con hoteles asociados. Ruta literal declarada antes del patrón
+     * de interoperabilidad para que Spring no la confunda con /{id}.
+     */
+    @PutMapping("/{id}/consentimiento")
+    public ClienteResponse consentimiento(@PathVariable String id, @RequestBody ConsentimientoRequest req) {
+        return ClienteResponse.de(service.actualizarConsentimiento(id, req.comparteDatos()));
+    }
+
+    /**
+     * Interoperabilidad entre hoteles: un sistema asociado (rol PARTNER, autenticado por el
+     * gateway) consulta por email el contacto básico de un cliente que haya dado su
+     * consentimiento. Devuelve SOLO nombre, apellidos, email y teléfono.
+     */
+    @GetMapping("/compartible")
+    public ClienteCompartibleResponse compartible(@RequestParam String email) {
+        return ClienteCompartibleResponse.de(service.obtenerCompartiblePorEmail(email));
+    }
 }

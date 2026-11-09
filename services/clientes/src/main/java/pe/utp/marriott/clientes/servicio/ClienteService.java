@@ -1,6 +1,7 @@
 package pe.utp.marriott.clientes.servicio;
 
 import java.util.List;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pe.utp.marriott.clientes.api.ClienteRequest;
@@ -52,6 +53,30 @@ public class ClienteService {
         validarUnicidad(req, id);
         copiar(req, c);
         return c;
+    }
+
+    /** El titular activa o desactiva el consentimiento para compartir su contacto con partners. */
+    @Transactional
+    public Cliente actualizarConsentimiento(String id, boolean comparte) {
+        Cliente c = obtener(id);
+        c.setComparteDatos(comparte);
+        return c;
+    }
+
+    /**
+     * Busca un cliente por email para entregárselo a un hotel asociado. Solo responde si el
+     * cliente existe Y autorizó compartir sus datos; en cualquier otro caso devuelve 404, para
+     * no revelar a un tercero si una persona está o no registrada ni si dio o no su consentimiento.
+     */
+    @Transactional(readOnly = true)
+    public Cliente obtenerCompartiblePorEmail(String email) {
+        if (email == null || email.isBlank()) {
+            throw ApiException.solicitudInvalida("EMAIL_REQUERIDO", "Debe indicar el email del cliente.");
+        }
+        return repo.findByEmailIgnoreCase(email.trim())
+                .filter(Cliente::isComparteDatos)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "NO_COMPARTIBLE",
+                        "No hay un cliente que haya autorizado compartir sus datos con ese email."));
     }
 
     private void validarUnicidad(ClienteRequest req, String idActual) {

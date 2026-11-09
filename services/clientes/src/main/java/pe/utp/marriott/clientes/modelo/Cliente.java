@@ -50,4 +50,9 @@ public class Cliente {
 
     @Column(name = "creado_en", nullable = false)
     private OffsetDateTime creadoEn;
+
+    // Consentimiento del cliente para compartir su contacto básico con hoteles asociados (partners).
+    // Por defecto NO comparte: el cliente debe activarlo explícitamente.
+    @Column(name = "comparte_datos", nullable = false)
+    private boolean comparteDatos = false;
 }
